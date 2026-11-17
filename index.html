@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex & Maya — Our Digital Scrapbook</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playfair Display (Editorial Serif) & Plus Jakarta Sans (Clean Body) & Caveat (Handwritten Polaroid Notes) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#FDFBF7',
+                        sand: '#F5EFE6',
+                        terracotta: '#C86D51',
+                        terracottaDark: '#A8543B',
+                        roseSoft: '#F3D8D3',
+                        charcoal: '#2C2623',
+                        warmGray: '#6E645F',
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+                        handwriting: ['"Caveat"', 'cursive'],
+                    },
+                    boxShadow: {
+                        'polaroid': '0 10px 25px -5px rgba(44, 38, 35, 0.1), 0 8px 10px -6px rgba(44, 38, 35, 0.08)',
+                        'soft': '0 20px 40px -15px rgba(200, 109, 81, 0.12)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom subtle paper texture & animations */
+        body {
+            background-color: #FDFBF7;
+            color: #2C2623;
+            background-image: radial-gradient(#E6DDD0 0.75px, transparent 0.75px);
+            background-size: 24px 24px;
+        }
+
+        .polaroid-card {
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+        }
+
+        .polaroid-card:hover {
+            transform: translateY(-6px) rotate(0deg) !important;
+            box-shadow: 0 20px 30px -10px rgba(44, 38, 35, 0.18);
+            z-index: 10;
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .animate-float {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .note-reveal {
+            animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FDFBF7;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #DFD3C3;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #C86D51;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-roseSoft selection:text-charcoal">
+
+    <!-- Top Navigation Bar -->
+    <nav class="sticky top-0 z-40 bg-cream/85 backdrop-blur-md border-b border-sand">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <a href="#" class="font-serif text-xl sm:text-2xl font-semibold tracking-tight text-charcoal flex items-center gap-2">
+                <span id="navNames">Oson &amp; Sarju</span>
+                <i data-lucide="heart" class="w-4 h-4 text-terracotta fill-terracotta"></i>
+            </a>
+
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium text-warmGray">
+                <a href="#timeline" class="hover:text-terracotta transition-colors">Our Timeline</a>
+                <a href="#love-jar" class="hover:text-terracotta transition-colors">Love Note Jar</a>
+                <a href="#bucket-list" class="hover:text-terracotta transition-colors">Bucket List</a>
+            </div>
+
+            <button onclick="toggleDrawer()" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-charcoal text-cream text-xs sm:text-sm font-medium hover:bg-terracotta transition-colors shadow-sm cursor-pointer">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Customize</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Toast Notification Banner (Replaces alert) -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-charcoal text-cream px-4 py-3 rounded-2xl shadow-lg flex items-center gap-2.5 text-sm font-medium">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-terracotta"></i>
+            <span id="toastMessage">Saved!</span>
+        </div>
+    </div>
+
+    <!-- Customize Drawer Overlay -->
+    <div id="drawerOverlay" onclick="toggleDrawer()" class="fixed inset-0 bg-charcoal/40 backdrop-blur-xs z-50 hidden transition-opacity"></div>
+
+    <!-- Slide-Over Customization Drawer -->
+    <aside id="customizeDrawer" class="fixed top-0 right-0 h-full w-full max-w-md bg-cream border-l border-sand z-50 transform translate-x-full transition-transform duration-300 ease-out flex flex-col shadow-2xl">
+        <div class="p-6 border-b border-sand flex items-center justify-between bg-sand/40">
+            <div>
+                <h2 class="font-serif text-xl font-semibold text-charcoal">Personalize Your Site</h2>
+                <p class="text-xs text-warmGray mt-0.5">Preview your names, dates &amp; story in real time</p>
+            </div>
+            <button onclick="toggleDrawer()" class="p-2 rounded-full hover:bg-sand text-warmGray hover:text-charcoal transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto flex-1 space-y-6">
+            <!-- Partner Names -->
+            <div class="space-y-3">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-warmGray">Couple Names</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <span class="text-xs text-warmGray mb-1 block">Your Name</span>
+                        <input type="text" id="inputName1" value="Oson" oninput="updateCoupleInfo()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none text-sm">
+                    </div>
+                    <div>
+                        <span class="text-xs text-warmGray mb-1 block">Her Name</span>
+                        <input type="text" id="inputName2" value="Sarju" oninput="updateCoupleInfo()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Anniversary Date -->
+            <div class="space-y-2">
+                <label for="inputStartDate" class="block text-xs font-semibold uppercase tracking-wider text-warmGray">Together Since (Date)</label>
+                <input type="date" id="inputStartDate" onchange="updateCoupleInfo()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none text-sm">
+            </div>
+
+            <!-- Hero Subtitle / Tagline -->
+            <div class="space-y-2">
+                <label for="inputTagline" class="block text-xs font-semibold uppercase tracking-wider text-warmGray">Hero Love Quote / Subtitle</label>
+                <textarea id="inputTagline" rows="2" oninput="updateCoupleInfo()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none text-sm">Every ordinary day feels like my favorite adventure since the moment I met you.</textarea>
+            </div>
+
+            <!-- Next Milestone / Countdown -->
+            <div class="space-y-3 pt-2 border-t border-sand">
+                <label class="block text-xs font-semibold uppercase tracking-wider text-warmGray">Next Big Date Countdown</label>
+                <input type="text" id="inputNextEvent" value="Our Anniversary Trip" oninput="updateCoupleInfo()" placeholder="e.g., Paris Trip or Next Date Night" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none text-sm">
+                <input type="date" id="inputNextDate" onchange="updateCoupleInfo()" class="w-full px-3.5 py-2.5 rounded-xl bg-white border border-sand focus:border-terracotta focus:outline-none text-sm">
+            </div>
+
+            <!-- Quick Tip -->
+            <div class="p-4 rounded-2xl bg-roseSoft/40 border border-roseSoft text-xs text-charcoal space-y-1.5">
+                <p class="font-semibold flex items-center gap-1.5">
+                    <i data-lucide="camera" class="w-3.5 h-3.5 text-terracotta"></i>
+                    Tip: Click any Polaroid photo!
+                </p>
+                <p class="text-warmGray leading-relaxed">You can click directly on any photo card in the timeline to upload your own picture from your phone or computer, and click any caption to rewrite your memories.</p>
+            </div>
+        </div>
+
+        <div class="p-5 border-t border-sand bg-sand/30 flex items-center justify-between gap-3">
+            <button onclick="resetDemoData()" class="px-4 py-2.5 rounded-xl text-xs font-medium text-warmGray hover:text-charcoal hover:bg-sand transition-colors">
+                Reset Defaults
+            </button>
+            <button onclick="toggleDrawer(); showToast('Template updated!')" class="px-5 py-2.5 rounded-xl bg-terracotta text-white text-sm font-medium hover:bg-terracottaDark transition-colors shadow-sm">
+                Done Previewing
+            </button>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        <!-- 1. HERO SECTION & LIVE TOGETHER COUNTER -->
+        <section class="relative pt-14 pb-20 sm:pt-20 sm:pb-28 px-4 sm:px-6 overflow-hidden">
+            <div class="max-w-4xl mx-auto text-center space-y-6">
+                <!-- Editorial Issue Pill -->
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sand border border-roseSoft text-xs font-semibold uppercase tracking-widest text-terracotta">
+                    <span>Est. <span id="heroYear">2024</span></span>
+                    <span>•</span>
+                    <span>Our Little Corner of the Internet</span>
+                </div>
+
+                <!-- Couple Headline -->
+                <h1 class="font-serif text-5xl sm:text-7xl font-bold tracking-tight text-charcoal leading-[1.1]">
+                    <span id="heroName1">Oson</span>
+                    <span class="italic font-normal text-terracotta mx-1">&amp;</span>
+                    <span id="heroName2">Sarju</span>
+                </h1>
+
+                <!-- Tagline -->
+                <p id="heroTagline" class="max-w-xl mx-auto text-base sm:text-lg text-warmGray leading-relaxed">
+                    Every ordinary day feels like my favorite adventure since the moment I met you.
+                </p>
+
+                <!-- Live "Together Since" Counter Card -->
+                <div class="pt-4">
+                    <div class="inline-block w-full max-w-2xl bg-white/90 backdrop-blur-xs border border-sand rounded-3xl p-6 sm:p-8 shadow-soft">
+                        <p class="text-xs font-semibold uppercase tracking-widest text-warmGray mb-4">
+                            Loving Each Other For
+                        </p>
+                        <div class="grid grid-cols-4 gap-2 sm:gap-6">
+                            <div class="bg-cream rounded-2xl p-3 sm:p-4 border border-sand">
+                                <div id="countDays" class="font-serif text-2xl sm:text-4xl font-bold text-terracotta">0</div>
+                                <div class="text-[11px] sm:text-xs font-medium text-warmGray uppercase tracking-wider mt-1">Days</div>
+                            </div>
+                            <div class="bg-cream rounded-2xl p-3 sm:p-4 border border-sand">
+                                <div id="countHours" class="font-serif text-2xl sm:text-4xl font-bold text-charcoal">0</div>
+                                <div class="text-[11px] sm:text-xs font-medium text-warmGray uppercase tracking-wider mt-1">Hours</div>
+                            </div>
+                            <div class="bg-cream rounded-2xl p-3 sm:p-4 border border-sand">
+                                <div id="countMinutes" class="font-serif text-2xl sm:text-4xl font-bold text-charcoal">0</div>
+                                <div class="text-[11px] sm:text-xs font-medium text-warmGray uppercase tracking-wider mt-1">Mins</div>
+                            </div>
+                            <div class="bg-cream rounded-2xl p-3 sm:p-4 border border-sand">
+                                <div id="countSeconds" class="font-serif text-2xl sm:text-4xl font-bold text-terracotta">0</div>
+                                <div class="text-[11px] sm:text-xs font-medium text-warmGray uppercase tracking-wider mt-1">Secs</div>
+                            </div>
+                        </div>
+
+                        <!-- Mini Countdown to Next Milestone -->
+                        <div class="mt-5 pt-4 border-t border-sand flex flex-col sm:flex-row items-center justify-center gap-2 text-xs sm:text-sm text-warmGray">
+                            <span class="inline-flex items-center gap-1.5 font-medium text-charcoal">
+                                <i data-lucide="calendar-heart" class="w-4 h-4 text-terracotta"></i>
+                                Next up: <strong id="nextEventLabel" class="font-semibold">Our Anniversary Trip</strong>
+                            </span>
+                            <span class="hidden sm:inline">•</span>
+                            <span id="nextEventCountdown" class="text-terracotta font-semibold">Calculating...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. OUR TIMELINE (DIGITAL SCRAPBOOK WITH POLAROIDS) -->
+        <section id="timeline" class="py-16 sm:py-24 px-4 sm:px-6 bg-sand/45 border-y border-sand">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
+                    <div>
+                        <span class="text-xs font-semibold uppercase tracking-widest text-terracotta">Chapter by Chapter</span>
+                        <h2 class="font-serif text-3xl sm:text-4xl font-bold text-charcoal mt-1">Our Story So Far</h2>
+                        <p class="text-sm text-warmGray mt-2">Click any photo to upload your own picture, or click text to edit your memory.</p>
+                    </div>
+                    <button onclick="addNewMilestone()" class="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white border border-sand hover:border-terracotta text-charcoal text-xs sm:text-sm font-medium transition-all shadow-xs cursor-pointer">
+                        <i data-lucide="plus" class="w-4 h-4 text-terracotta"></i>
+                        <span>Add Memory</span>
+                    </button>
+                </div>
+
+                <!-- Hidden File Input for Uploading Custom Polaroid Photos -->
+                <input type="file" id="photoUploader" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+
+                <!-- Timeline Grid -->
+                <div id="timelineGrid" class="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10">
+                    <!-- Rendered dynamically via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. INTERACTIVE DIGITAL LOVE NOTE JAR -->
+        <section id="love-jar" class="py-16 sm:py-24 px-4 sm:px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <span class="text-xs font-semibold uppercase tracking-widest text-terracotta">Whenever You Need a Smile</span>
+                <h2 class="font-serif text-3xl sm:text-4xl font-bold text-charcoal mt-1">The Digital Love Jar</h2>
+                <p class="text-sm sm:text-base text-warmGray mt-2 max-w-lg mx-auto">
+                    Tap the jar whenever you miss me or need a reminder of why you're my favorite person.
+                </p>
+
+                <!-- Jar Display Card -->
+                <div class="mt-10 bg-white border border-sand rounded-3xl p-8 sm:p-12 shadow-soft relative overflow-hidden">
+                    <!-- Decorative subtle heart watermark -->
+                    <i data-lucide="heart" class="w-32 h-32 text-roseSoft/30 fill-roseSoft/30 absolute -top-6 -right-6 rotate-12 pointer-events-none"></i>
+
+                    <div class="relative z-10 flex flex-col items-center">
+                        <!-- Floating Jar Icon Badge -->
+                        <div class="w-16 h-16 rounded-2xl bg-roseSoft/60 text-terracotta flex items-center justify-center mb-6 animate-float">
+                            <i data-lucide="mail-heart" class="w-8 h-8"></i>
+                        </div>
+
+                        <!-- Active Note Display -->
+                        <div class="min-h-[110px] flex items-center justify-center w-full max-w-xl">
+                            <blockquote id="loveNoteDisplay" class="font-serif italic text-xl sm:text-2xl text-charcoal leading-relaxed">
+                                "I still get butterflies every time my phone lights up with your name."
+                            </blockquote>
+                        </div>
+
+                        <p id="noteCounterText" class="text-xs text-warmGray mt-3">Note 1 of 6 in the jar</p>
+
+                        <!-- Action Buttons -->
+                        <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+                            <button onclick="drawLoveNote()" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-terracotta hover:bg-terracottaDark text-white font-medium text-sm transition-all shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                                <span>Pick Another Note</span>
+                            </button>
+                            <button onclick="toggleAddNoteForm()" class="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-cream hover:bg-sand border border-sand text-charcoal font-medium text-sm transition-colors cursor-pointer">
+                                <i data-lucide="pen-line" class="w-4 h-4 text-terracotta"></i>
+                                <span>Add a Note</span>
+                            </button>
+                        </div>
+
+                        <!-- Expandable Add New Note Form -->
+                        <form id="addNoteForm" onsubmit="saveNewNote(event)" class="hidden w-full max-w-md mt-6 pt-6 border-t border-sand text-left">
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-warmGray mb-2">Write a new sweet note or inside joke</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="newNoteInput" required placeholder="e.g., Remember our 2am taco run..." class="flex-1 px-4 py-2.5 rounded-xl bg-cream border border-sand focus:border-terracotta focus:outline-none text-sm">
+                                <button type="submit" class="px-4 py-2.5 rounded-xl bg-charcoal text-cream text-sm font-medium hover:bg-terracotta transition-colors cursor-pointer">
+                                    Drop in Jar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. SHARED BUCKET LIST & ADVENTURE TRACKER -->
+        <section id="bucket-list" class="py-16 sm:py-24 px-4 sm:px-6 bg-sand/45 border-t border-sand">
+            <div class="max-w-3xl mx-auto">
+                <div class="text-center mb-10">
+                    <span class="text-xs font-semibold uppercase tracking-widest text-terracotta">Future Adventures</span>
+                    <h2 class="font-serif text-3xl sm:text-4xl font-bold text-charcoal mt-1">Our Shared Bucket List</h2>
+                    <p class="text-sm text-warmGray mt-2">Dreams, trips, and little date ideas we're checking off together.</p>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="bg-white border border-sand rounded-3xl p-6 sm:p-8 shadow-soft">
+                    <!-- Progress Header -->
+                    <div class="flex items-center justify-between text-sm font-medium mb-2">
+                        <span class="text-charcoal">Adventures Completed</span>
+                        <span id="bucketProgressText" class="text-terracotta font-semibold">2 of 6 (33%)</span>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="w-full h-2.5 bg-sand rounded-full overflow-hidden mb-8">
+                        <div id="bucketProgressBar" class="h-full bg-terracotta rounded-full transition-all duration-500" style="width: 33%"></div>
+                    </div>
+
+                    <!-- Add New Dream Form -->
+                    <form onsubmit="addBucketItem(event)" class="flex flex-col sm:flex-row gap-2.5 mb-6">
+                        <input type="text" id="newBucketInput" required placeholder="Add a dream trip, restaurant, or date idea..." class="flex-1 px-4 py-3 rounded-2xl bg-cream border border-sand focus:border-terracotta focus:outline-none text-sm">
+                        <select id="newBucketCategory" class="px-3.5 py-3 rounded-2xl bg-cream border border-sand focus:border-terracotta focus:outline-none text-sm text-charcoal">
+                            <option value="Travel">✈️ Travel</option>
+                            <option value="Foodie">🍝 Foodie</option>
+                            <option value="Date Night">🌙 Date Night</option>
+                            <option value="Milestone">🏡 Milestone</option>
+                        </select>
+                        <button type="submit" class="px-5 py-3 rounded-2xl bg-charcoal hover:bg-terracotta text-cream text-sm font-medium transition-colors cursor-pointer whitespace-nowrap">
+                            + Add Dream
+                        </button>
+                    </form>
+
+                    <!-- Checklist Items -->
+                    <ul id="bucketListContainer" class="space-y-3">
+                        <!-- Rendered dynamically via JS -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-10 px-4 text-center border-t border-sand bg-cream">
+        <p class="font-serif italic text-lg text-charcoal">
+            Made with love for <span id="footerNames">Oson &amp; Sarju</span>
+        </p>
+        <p class="text-xs text-warmGray mt-2">
+            Click <button onclick="toggleDrawer()" class="underline text-terracotta hover:text-terracottaDark cursor-pointer">Customize</button> anytime to edit names, dates, and memories.
+        </p>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // Default State
+        const defaultState = {
+            name1: "Oson",
+            name2: "Sarju",
+            // Default to ~1.5 years ago from current date so counter looks lively
+            startDate: "2022-04-04",
+            nextEvent: "Our Anniversary Trip",
+            nextDate: "2027-05-14",
+            tagline: "Every ordinary day feels like my favorite adventure since the moment I met you.",
+            milestones: [
+                {
+                    id: 1,
+                    date: "April 4, 2022",
+                    title: "The Day We First Met",
+                    caption: "Rainy afternoon at the corner coffee shop — we talked for four hours straight.",
+                    rotation: "-rotate-1",
+                    image: "https://images.unsplash.com/photo-1511988617509-a57c8a288659?auto=format&fit=crop&w=800&q=80"
+                },
+                {
+                    id: 2,
+                    date: "May 22, 2024",
+                    title: "Our First Official Date",
+                    caption: "Sunset walk by the water and sharing the best pasta in town.",
+                    rotation: "rotate-1",
+                    image: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=800&q=80"
+                },
+                {
+                    id: 3,
+                    date: "September 10, 2024",
+                    title: "First Weekend Road Trip",
+                    caption: "Windows down, terrible singing, and getting lost on the coastal highway.",
+                    rotation: "rotate-1",
+                    image: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80"
+                },
+                {
+                    id: 4,
+                    date: "May 14, 2025",
+                    title: "One Year Together",
+                    caption: "365 days of laughing until our stomachs hurt. Here's to forever.",
+                    rotation: "-rotate-1",
+                    image: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=800&q=80"
+                }
+            ],
+            loveNotes: [
+                "I still get butterflies every time my phone lights up with your name.",
+                "Thank you for always knowing how to make me laugh on my busiest days.",
+                "My favorite place in the world is literally anywhere next to you.",
+                "I love the way your eyes light up whenever you talk about things you're passionate about.",
+                "Even doing grocery shopping with you feels like a date.",
+                "You are my best friend, my safe place, and my greatest adventure."
+            ],
+            currentNoteIndex: 0,
+            bucketList: [
+                { id: 1, text: "Watch the sunrise from a mountain peak together", category: "Travel", done: true },
+                { id: 2, text: "Take a homemade pasta & tiramisu cooking class", category: "Foodie", done: true },
+                { id: 3, text: "Stargaze in the back of a truck with blankets & hot cocoa", category: "Date Night", done: false },
+                { id: 4, text: "Visit Kyoto during cherry blossom season", category: "Travel", done: false },
+                { id: 5, text: "Adopt a golden retriever puppy together", category: "Milestone", done: false },
+                { id: 6, text: "Build a blanket fort and marathon our favorite movie trilogy", category: "Date Night", done: false }
+            ]
+        };
+
+        // Load state from localStorage if available
+        let appState = JSON.parse(localStorage.getItem('coupleSiteState')) || JSON.parse(JSON.stringify(defaultState));
+        let activeUploadMilestoneId = null;
+
+        function saveState() {
+            try {
+                localStorage.setItem('coupleSiteState', JSON.stringify(appState));
+            } catch (e) {
+                // Handle quota exceeded if user uploads huge high-res images
+                console.warn("Storage full, keeping changes in current session.");
+            }
+        }
+
+        // Initialize Page
+        window.onload = function () {
+            lucide.createIcons();
+            syncDrawerInputs();
+            renderAll();
+            startLiveTimers();
+        };
+
+        function syncDrawerInputs() {
+            document.getElementById('inputName1').value = appState.name1;
+            document.getElementById('inputName2').value = appState.name2;
+            document.getElementById('inputStartDate').value = appState.startDate;
+            document.getElementById('inputTagline').value = appState.tagline;
+            document.getElementById('inputNextEvent').value = appState.nextEvent;
+            document.getElementById('inputNextDate').value = appState.nextDate;
+        }
+
+        function renderAll() {
+            // Update Names & Text
+            const combined = `${appState.name1} & ${appState.name2}`;
+            document.title = `${combined} — Our Digital Scrapbook`;
+            document.getElementById('navNames').textContent = combined;
+            document.getElementById('heroName1').textContent = appState.name1;
+            document.getElementById('heroName2').textContent = appState.name2;
+            document.getElementById('footerNames').textContent = combined;
+            document.getElementById('heroTagline').textContent = appState.tagline;
+            document.getElementById('nextEventLabel').textContent = appState.nextEvent || "Our Next Adventure";
+
+            const startYear = new Date(appState.startDate).getFullYear();
+            if (!isNaN(startYear)) {
+                document.getElementById('heroYear').textContent = startYear;
+            }
+
+            renderTimeline();
+            renderLoveNote();
+            renderBucketList();
+            updateCounters();
+        }
+
+        // Live Updating Counters
+        function startLiveTimers() {
+            updateCounters();
+            setInterval(updateCounters, 1000);
+        }
+
+        function updateCounters() {
+            const now = new Date();
+            const start = new Date(appState.startDate + "T00:00:00");
+            const diff = Math.max(0, now - start);
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / 1000 / 60) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('countDays').textContent = days.toLocaleString();
+            document.getElementById('countHours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('countMinutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('countSeconds').textContent = String(seconds).padStart(2, '0');
+
+            // Next Event Countdown
+            const nextTarget = new Date(appState.nextDate + "T00:00:00");
+            const diffNext = nextTarget - now;
+            const countdownEl = document.getElementById('nextEventCountdown');
+
+            if (isNaN(nextTarget.getTime())) {
+                countdownEl.textContent = "Set a date in Customize";
+            } else if (diffNext <= 0) {
+                countdownEl.textContent = "Happening today! 🎉";
+            } else {
+                const daysLeft = Math.ceil(diffNext / (1000 * 60 * 60 * 24));
+                countdownEl.textContent = `In ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`;
+            }
+        }
+
+        // Drawer Toggle
+        function toggleDrawer() {
+            const drawer = document.getElementById('customizeDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            const isClosed = drawer.classList.contains('translate-x-full');
+
+            if (isClosed) {
+                drawer.classList.remove('translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                drawer.classList.add('translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function updateCoupleInfo() {
+            appState.name1 = document.getElementById('inputName1').value.trim() || "Oson";
+            appState.name2 = document.getElementById('inputName2').value.trim() || "Sarju";
+            appState.startDate = document.getElementById('inputStartDate').value || "2022-04-04";
+            appState.tagline = document.getElementById('inputTagline').value;
+            appState.nextEvent = document.getElementById('inputNextEvent').value;
+            appState.nextDate = document.getElementById('inputNextDate').value;
+
+            saveState();
+            renderAll();
+        }
+
+        // Timeline Rendering & Inline Editing
+        function renderTimeline() {
+            const grid = document.getElementById('timelineGrid');
+            grid.innerHTML = appState.milestones.map((item) => `
+                <article class="polaroid-card bg-white p-4 sm:p-5 pb-7 rounded-2xl border border-sand shadow-polaroid ${item.rotation} relative group">
+                    <!-- Photo Container with Upload Overlay -->
+                    <div onclick="triggerPhotoUpload(${item.id})" class="relative aspect-[4/3] w-full rounded-xl overflow-hidden bg-sand cursor-pointer">
+                        <img src="${item.image}" alt="${item.title}" onerror="this.src='https://placehold.co/800x600/F5EFE6/C86D51?text=Our+Memory'" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        <div class="absolute inset-0 bg-charcoal/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span class="px-3.5 py-2 rounded-full bg-white/95 text-charcoal text-xs font-semibold flex items-center gap-1.5 shadow-md">
+                                <i data-lucide="camera" class="w-3.5 h-3.5 text-terracotta"></i>
+                                Change Photo
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Editable Text Details -->
+                    <div class="mt-4 px-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <span contenteditable="true" onblur="updateMilestoneField(${item.id}, 'date', this.innerText)" class="text-xs font-semibold uppercase tracking-wider text-terracotta focus:outline-none focus:bg-roseSoft/30 rounded px-1 -mx-1">
+                                ${item.date}
+                            </span>
+                            <button onclick="deleteMilestone(${item.id})" title="Remove memory" class="opacity-0 group-hover:opacity-100 text-warmGray hover:text-terracotta transition-opacity p-1 cursor-pointer">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <h3 contenteditable="true" onblur="updateMilestoneField(${item.id}, 'title', this.innerText)" class="font-serif text-xl font-bold text-charcoal mt-1 focus:outline-none focus:bg-roseSoft/30 rounded px-1 -mx-1">
+                            ${item.title}
+                        </h3>
+                        <p contenteditable="true" onblur="updateMilestoneField(${item.id}, 'caption', this.innerText)" class="font-handwriting text-xl sm:text-2xl text-warmGray mt-2 leading-snug focus:outline-none focus:bg-roseSoft/30 rounded px-1 -mx-1">
+                            ${item.caption}
+                        </p>
+                    </div>
+                </article>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function triggerPhotoUpload(milestoneId) {
+            activeUploadMilestoneId = milestoneId;
+            document.getElementById('photoUploader').click();
+        }
+
+        function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file || activeUploadMilestoneId === null) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const milestone = appState.milestones.find(m => m.id === activeUploadMilestoneId);
+                if (milestone) {
+                    milestone.image = e.target.result;
+                    saveState();
+                    renderTimeline();
+                    showToast("Photo updated!");
+                }
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function updateMilestoneField(id, field, value) {
+            const milestone = appState.milestones.find(m => m.id === id);
+            if (milestone && value.trim()) {
+                milestone[field] = value.trim();
+                saveState();
+            }
+        }
+
+        function addNewMilestone() {
+            const rotations = ["-rotate-1", "rotate-1"];
+            const newId = Date.now();
+            appState.milestones.push({
+                id: newId,
+                date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                title: "A New Favorite Memory",
+                caption: "Click here to write about this special moment together...",
+                rotation: rotations[appState.milestones.length % 2],
+                image: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80"
+            });
+            saveState();
+            renderTimeline();
+            showToast("New Polaroid card added!");
+        }
+
+        function deleteMilestone(id) {
+            if (appState.milestones.length <= 1) {
+                showToast("Keep at least one memory card!");
+                return;
+            }
+            appState.milestones = appState.milestones.filter(m => m.id !== id);
+            saveState();
+            renderTimeline();
+            showToast("Memory removed");
+        }
+
+        // Digital Love Note Jar Logic
+        function renderLoveNote() {
+            const display = document.getElementById('loveNoteDisplay');
+            const counter = document.getElementById('noteCounterText');
+            const total = appState.loveNotes.length;
+            const idx = appState.currentNoteIndex % total;
+
+            display.classList.remove('note-reveal');
+            void display.offsetWidth; // trigger reflow for animation
+            display.classList.add('note-reveal');
+
+            display.textContent = `"${appState.loveNotes[idx]}"`;
+            counter.textContent = `Note ${idx + 1} of ${total} in the jar`;
+        }
+
+        function drawLoveNote() {
+            if (appState.loveNotes.length <= 1) return;
+            let nextIndex;
+            do {
+                nextIndex = Math.floor(Math.random() * appState.loveNotes.length);
+            } while (nextIndex === appState.currentNoteIndex);
+
+            appState.currentNoteIndex = nextIndex;
+            renderLoveNote();
+        }
+
+        function toggleAddNoteForm() {
+            const form = document.getElementById('addNoteForm');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('newNoteInput').focus();
+            }
+        }
+
+        function saveNewNote(event) {
+            event.preventDefault();
+            const input = document.getElementById('newNoteInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            appState.loveNotes.push(text);
+            appState.currentNoteIndex = appState.loveNotes.length - 1;
+            input.value = '';
+            document.getElementById('addNoteForm').classList.add('hidden');
+            saveState();
+            renderLoveNote();
+            showToast("Added your note to the jar!");
+        }
+
+        // Shared Bucket List Logic
+        function renderBucketList() {
+            const container = document.getElementById('bucketListContainer');
+            const total = appState.bucketList.length;
+            const completed = appState.bucketList.filter(i => i.done).length;
+            const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+            document.getElementById('bucketProgressText').textContent = `${completed} of ${total} (${percent}%)`;
+            document.getElementById('bucketProgressBar').style.width = `${percent}%`;
+
+            const badgeColors = {
+                'Travel': 'bg-amber-50 text-amber-800 border-amber-200',
+                'Foodie': 'bg-rose-50 text-rose-800 border-rose-200',
+                'Date Night': 'bg-indigo-50 text-indigo-800 border-indigo-200',
+                'Milestone': 'bg-emerald-50 text-emerald-800 border-emerald-200'
+            };
+
+            container.innerHTML = appState.bucketList.map(item => `
+                <li class="flex items-center justify-between gap-3 p-3.5 rounded-2xl border transition-all ${item.done ? 'bg-cream/60 border-sand/70' : 'bg-cream border-sand hover:border-terracotta/50'}">
+                    <button onclick="toggleBucketItem(${item.id})" class="flex items-center gap-3.5 text-left flex-1 cursor-pointer group">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center border transition-colors shrink-0 ${item.done ? 'bg-terracotta border-terracotta text-white' : 'border-warmGray/40 group-hover:border-terracotta bg-white'}">
+                            ${item.done ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
+                        </span>
+                        <span class="text-sm sm:text-base transition-all ${item.done ? 'line-through text-warmGray' : 'text-charcoal font-medium'}">
+                            ${item.text}
+                        </span>
+                    </button>
+
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="hidden sm:inline-block text-[11px] font-medium px-2.5 py-0.5 rounded-full border ${badgeColors[item.category] || 'bg-sand text-charcoal border-sand'}">
+                            ${item.category}
+                        </span>
+                        <button onclick="deleteBucketItem(${item.id})" title="Remove item" class="text-warmGray/60 hover:text-terracotta p-1 transition-colors cursor-pointer">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </li>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function toggleBucketItem(id) {
+            const item = appState.bucketList.find(i => i.id === id);
+            if (item) {
+                item.done = !item.done;
+                saveState();
+                renderBucketList();
+                if (item.done) {
+                    showToast("Adventure checked off! ✨");
+                }
+            }
+        }
+
+        function addBucketItem(event) {
+            event.preventDefault();
+            const input = document.getElementById('newBucketInput');
+            const category = document.getElementById('newBucketCategory').value;
+            const text = input.value.trim();
+            if (!text) return;
+
+            appState.bucketList.unshift({
+                id: Date.now(),
+                text,
+                category,
+                done: false
+            });
+
+            input.value = '';
+            saveState();
+            renderBucketList();
+            showToast("Added to your bucket list!");
+        }
+
+        function deleteBucketItem(id) {
+            appState.bucketList = appState.bucketList.filter(i => i.id !== id);
+            saveState();
+            renderBucketList();
+        }
+
+        // Reset Demo Data
+        function resetDemoData() {
+            appState = JSON.parse(JSON.stringify(defaultState));
+            saveState();
+            syncDrawerInputs();
+            renderAll();
+            showToast("Reset to default template");
+        }
+
+        // Toast Feedback Helper
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2600);
+        }
+    </script>
+</body>
+</html>
